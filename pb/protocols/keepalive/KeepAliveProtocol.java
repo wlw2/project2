@@ -1,6 +1,4 @@
 package pb.protocols.keepalive;
-
-import java.time.Instant;
 import java.util.logging.Logger;
 
 import pb.Endpoint;
@@ -10,6 +8,10 @@ import pb.Utils;
 import pb.protocols.Message;
 import pb.protocols.Protocol;
 import pb.protocols.IRequestReplyProtocol;
+import pb.protocols.session.SessionStartReply;
+import pb.protocols.session.SessionStartRequest;
+import pb.protocols.session.SessionStopReply;
+import pb.server.ServerManager;
 
 /**
  * Provides all of the protocol logic for both client and server to undertake
@@ -27,34 +29,38 @@ import pb.protocols.IRequestReplyProtocol;
  * should send the KeepAlive request immediately, whereas the server will wait
  * up to 20 seconds before it assumes the client is dead. The protocol stops
  * when a timeout occurs.
- * 
+ *
  * @see {@link pb.Manager}
  * @see {@link pb.Endpoint}
  * @see {@link pb.protocols.Message}
  * @see {@link pb.protocols.keepalive.KeepAliveRequest}
- * @see {@link pb.protocols.keepalive.KeepaliveRespopnse}
+ * @see {@link pb.protocols.keepalive.KeepAliveReply}
  * @see {@link pb.protocols.Protocol}
- * @see {@link pb.protocols.IRequestReqplyProtocol}
  * @author aaron
  *
  */
 public class KeepAliveProtocol extends Protocol implements IRequestReplyProtocol {
 	private static Logger log = Logger.getLogger(KeepAliveProtocol.class.getName());
-	
+	private Utils utils;
 	/**
-	 * Name of this protocol. 
+	 * Name of this protocol.
 	 */
-	public static final String protocolName="KeepAliveProtocol";
-	
+	public static final String protocolName = "KeepAliveProtocol";
+	public Boolean ReceiveReply = false;
+	public Boolean ReceiveRequest = false;
+	public Boolean first = true;
+
 	/**
 	 * Initialise the protocol with an endopint and a manager.
+	 *
 	 * @param endpoint
 	 * @param manager
 	 */
 	public KeepAliveProtocol(Endpoint endpoint, Manager manager) {
-		super(endpoint,manager);
+		super(endpoint, manager);
+		utils = new Utils();
 	}
-	
+
 	/**
 	 * @return the name of the protocol
 	 */
@@ -64,74 +70,128 @@ public class KeepAliveProtocol extends Protocol implements IRequestReplyProtocol
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	@Override
 	public void stopProtocol() {
-		
+		ReceiveReply = false;
+		ReceiveRequest = false;
+		first = true;
 	}
-	
+
 	/*
 	 * Interface methods
 	 */
-	
-	/**
-	 * 
-	 */
-	public void startAsServer() {
-		
-	}
-	
-	/**
-	 * 
-	 */
-	public void checkClientTimeout() {
-		
-	}
-	
-	/**
-	 * 
-	 */
-	public void startAsClient() throws EndpointUnavailable {
-		
-	}
 
 	/**
-	 * 
-	 * @param msg
+	 *
 	 */
-	@Override
-	public void sendRequest(Message msg) throws EndpointUnavailable {
-		
-	}
-
-	/**
-	 * 
-	 * @param msg
-	 */
-	@Override
-	public void receiveReply(Message msg) {
-		
+	public void startAsServer()  {
+		ReceiveRequest = true;
+		try {
+			sendReply(new KeepAliveRequest());
+		} catch (EndpointUnavailable endpointUnavailable) {
+			endpointUnavailable.printStackTrace();
+		}
 	}
 
 	/**
 	 *
-	 * @param msg
-	 * @throws EndpointUnavailable 
 	 */
-	@Override
-	public void receiveRequest(Message msg) throws EndpointUnavailable {
-		
+	public void checkClientTimeout() {
+		Utils.getInstance().setTimeout(()->{
+			if(ReceiveRequest){
+				try {
+					sendReply(new KeepAliveRequest());
+				} catch (EndpointUnavailable endpointUnavailable) {
+					endpointUnavailable.printStackTrace();
+				}
+				return;
+			}else {
+				manager.endpointTimedOut(endpoint, this);
+			}
+		},20050);
+
 	}
 
 	/**
-	 * 
+	 *
+	 */
+	public void startAsClient() throws EndpointUnavailable {
+		ReceiveReply = true;
+		sendRequest(new KeepAliveRequest());
+	}
+
+	/**
+	 * @param msg
+	 */
+	@Override
+	public void sendRequest(Message msg)  {
+		if(first) {
+			try {
+				endpoint.send(msg);
+			} catch (EndpointUnavailable endpointUnavailable) {
+				endpointUnavailable.printStackTrace();
+			}
+
+			ReceiveReply = false;
+			first = false;
+		}
+
+		else {
+
+			Utils.getInstance().setTimeout(() -> {
+				if (ReceiveReply) {
+					try {
+						sendRequest(new KeepAliveRequest());
+						endpoint.send(msg);
+					} catch (EndpointUnavailable endpointUnavailable) {
+						endpointUnavailable.printStackTrace();
+					}
+					ReceiveReply = false;
+					return;
+				} else {
+					manager.endpointTimedOut(endpoint, this);
+				}
+			}, 20000);
+		}
+
+	}
+
+
+	/**
+	 * @param msg
+	 */
+	@Override
+	public void receiveReply(Message msg) throws EndpointUnavailable {
+		if (msg instanceof KeepAliveReply) {
+			ReceiveReply = true;
+			sendRequest(new KeepAliveRequest());
+		}
+	}
+
+	/**
+	 * @param msg
+	 * @throws EndpointUnavailable
+	 */
+	@Override
+	public void receiveRequest(Message msg) throws EndpointUnavailable {
+		if (msg instanceof KeepAliveRequest) {
+			ReceiveRequest = true;
+			sendReply(new KeepAliveReply());
+		}
+	}
+
+	/**
 	 * @param msg
 	 */
 	@Override
 	public void sendReply(Message msg) throws EndpointUnavailable {
-		
+		endpoint.send(msg);
+		Utils.getInstance().setTimeout(() -> {
+			ReceiveRequest = false;
+		}, 19000);
+		checkClientTimeout();
 	}
-	
-	
 }
+
