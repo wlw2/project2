@@ -123,7 +123,7 @@ public class KeepAliveProtocol extends Protocol implements IRequestReplyProtocol
 	}
 
 	/**
-	 * @param msg
+	 * @param msg.
 	 */
 	@Override
 	public void sendRequest(Message msg)  {
