@@ -160,7 +160,7 @@ public class KeepAliveProtocol extends Protocol implements IRequestReplyProtocol
 
 
 	/**
-	 * @param msg
+	 * @param msgg
 	 */
 	@Override
 	public void receiveReply(Message msg) throws EndpointUnavailable {

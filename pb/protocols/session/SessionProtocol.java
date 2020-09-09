@@ -196,7 +196,7 @@ public class SessionProtocol extends Protocol implements IRequestReplyProtocol {
 	}
 
 	/**
-	 * Just send a reply, nothing special to do.
+	 * Just send a reply, nothing special to do..
 	 * @param msg
 	 */
 
