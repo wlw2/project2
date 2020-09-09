@@ -87,43 +87,20 @@ public class SessionProtocol extends Protocol implements IRequestReplyProtocol {
 	 */
 	@Override
 	public void startAsClient() throws EndpointUnavailable {
-		log.info("START AS CLIENT");
 		//  send the server a start session request
 		sendRequest(new SessionStartRequest());
-
-		/* STARTING TIMING BEFORE "received SessionStartReply"*/
-		/* timeout if no reply from SERVER in 20s */
-
 		Utils.getInstance().setTimeout(() -> {
 			this.receiveReply(msg);
-
 			if(msg == null){
-				log.info("CLIENT DID NOT RECEIVE THE REPLY IN 20S");
 				manager.endpointTimedOut(endpoint, this);
 			}
-		}, 20000); //do sth after 20s
-		//Utils.getInstance().cleanUp();
+		}, 20000);
 	}
-	/* delay sending SessionStartReply for testing*/
-
-
-	// provide a timeout event to its manager
-	// if there is no response to a request message within 20 seconds,
-
-
-	//ServerManager starting the SessionProtocol as soon as the endpoint is ready
-	//The endpoint is ready when the endpoint calls endpointReady
-
-
 	/**
 	 * Called by the manager that is acting as a server.
 	 */
 	@Override
 	public void startAsServer() {
-		log.info("START AS SERVER");
-
-		/* STARTING TIMING BEFORE "received SessionStartRequest"*/
-		/* timeout if no request received in 20s after a session starts */
 		Utils.getInstance().setTimeout(() -> {
 			try {
 				this.receiveRequest(msg);
@@ -131,23 +108,10 @@ public class SessionProtocol extends Protocol implements IRequestReplyProtocol {
 				endpointUnavailable.printStackTrace();
 			}
 			if(msg == null){
-				log.info("SERVER DID NOT RECEIVE THE REQUEST IN 20S");
 				manager.endpointTimedOut(endpoint, this);
-
-			} //do sth after 20s
+			}
 		}, 20000);
-		//Utils.getInstance().cleanUp();
 	}
-
-	/* delay sending SessionStartRequest for testing*/
-
-	// provide a timeout event to its manager when the protocol is started as a server,
-	// if a session start request message is not received within 20 seconds of starting the protocol.
-
-	//server will timeout if it does not receive a session start request in 20 seconds from starting the protocol.
-
-
-
 	/**
 	 * Generic stop session call, for either client or server.
 	 * @throws EndpointUnavailable if the endpoint is not ready or has terminated
@@ -162,13 +126,13 @@ public class SessionProtocol extends Protocol implements IRequestReplyProtocol {
 	 */
 	@Override
 	public void sendRequest(Message msg) throws EndpointUnavailable {
-		//Utils.getInstance().setTimeout(() -> {
-		//	try {
-		endpoint.send(msg);
-		//	} catch (EndpointUnavailable endpointUnavailable) {
-		//		endpointUnavailable.printStackTrace();
-		//	}
-		//}, 20000);
+		Utils.getInstance().setTimeout(() -> {
+			try {
+				endpoint.send(msg);
+			} catch (EndpointUnavailable endpointUnavailable) {
+				endpointUnavailable.printStackTrace();
+			}
+		}, 20000);
 	}
 
 
@@ -181,7 +145,6 @@ public class SessionProtocol extends Protocol implements IRequestReplyProtocol {
 	 */
 	@Override
 	public void receiveReply(Message msg) {
-		log.info("CLIENT SIDE: " + "\n");
 		if (msg instanceof SessionStartReply) {
 			if (protocolRunning) {
 				// error, received a second reply?
@@ -190,7 +153,6 @@ public class SessionProtocol extends Protocol implements IRequestReplyProtocol {
 			}
 			protocolRunning = true;
 			manager.sessionStarted(endpoint);
-			System.out.print("--- SessionStartReply END ---");
 		} else if (msg instanceof SessionStopReply) {
 			if (!protocolRunning) {
 				// error, received a second reply?
@@ -199,7 +161,6 @@ public class SessionProtocol extends Protocol implements IRequestReplyProtocol {
 			}
 			protocolRunning = false;
 			manager.sessionStopped(endpoint);
-			log.info("--- SessionStopReply END ---");
 		}
 
 	}
@@ -223,7 +184,6 @@ public class SessionProtocol extends Protocol implements IRequestReplyProtocol {
 			protocolRunning=true;
 			sendReply(new SessionStartReply());
 			manager.sessionStarted(endpoint);
-			System.out.print("--- SessionStartRequest END ---");
 		} else if(msg instanceof SessionStopRequest) {
 			if(!protocolRunning) {
 				// error, received a second request?
@@ -232,8 +192,6 @@ public class SessionProtocol extends Protocol implements IRequestReplyProtocol {
 			protocolRunning=false;
 			sendReply(new SessionStopReply());
 			manager.sessionStopped(endpoint);
-			System.out.print("--- SessionStopRequest END ---");
-
 		}
 	}
 
@@ -244,12 +202,12 @@ public class SessionProtocol extends Protocol implements IRequestReplyProtocol {
 
 	@Override
 	public void sendReply(Message msg) throws EndpointUnavailable {
-		//Utils.getInstance().setTimeout(() -> {
-		//	try {
-		endpoint.send(msg);
-		//	} catch (EndpointUnavailable endpointUnavailable) {
-		//		endpointUnavailable.printStackTrace();
-		//	}
-		//}, 20000);
+		Utils.getInstance().setTimeout(() -> {
+			try {
+				endpoint.send(msg);
+			} catch (EndpointUnavailable endpointUnavailable) {
+				endpointUnavailable.printStackTrace();
+			}
+		}, 20000);
 	}
 }
