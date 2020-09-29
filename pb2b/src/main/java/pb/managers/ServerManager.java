@@ -480,7 +480,7 @@ public class ServerManager extends Manager implements ISessionProtocolHandler,
 	}
 
 	/**
-	 * The client has timed out.
+	 * The client has timed out
 	 * Usual practice is to terminate the client connection.
 	 * @param endpoint
 	 * @param protocol
