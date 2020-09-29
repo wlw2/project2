@@ -130,17 +130,33 @@ public class ServerManager extends Manager implements ISessionProtocolHandler,
 	 * Initialise the ServerManager with a port number for the io thread to listen on.
 	 * @param port to use when creating the io thread
 	 */
+/*
 	public ServerManager(int port) {
 		this.port=port;
 		liveEndpoints=new HashSet<>();
 		setName("ServerManager"); // name the thread, urgh simple log can't print it :-(
 	}
+
+
+ */
+
 	
 	/**
 	 * TODO: for Project 2B. Create an initializer that does as above but also takes
 	 * a password as an argument.
 	 */
-	
+    private String password;
+
+	public ServerManager(int port, String password){
+		this.port=port;
+		if (password == "123"){
+
+		}
+		liveEndpoints=new HashSet<>();
+		setName("serverManager");
+
+	}
+
 	/**
 	 * TODO: for Project 2B. Use one of these methods appropriately for the event
 	 * emitted, when your server receives a correct password. Usually a single
@@ -149,7 +165,26 @@ public class ServerManager extends Manager implements ISessionProtocolHandler,
 	 * server down, like if they are in a rush, or can wait for existing clients to
 	 * finish up gracefully, or if they can't wait at all, etc.
 	 */
-	
+	public void checkShutdown(String check, String how){
+		if (check == password){
+			if (how == shutdownServer){
+				shutdown();
+			}
+			else if (how == forceShutdownServer){
+				forceShutdown();
+			}
+			else if (how == vaderShutdownServer){
+				vaderShutdown();
+			}
+			else{
+				log.severe("wrong way! make sure there is no typo");
+			}
+		}
+		else {
+			log.severe("wrong password");
+		}
+	}
+
 	public void shutdown() {
 		log.info("server shutdown called");
 		// this will not force existing clients to finish their sessions
@@ -290,7 +325,14 @@ public class ServerManager extends Manager implements ISessionProtocolHandler,
 		 * command line when the server is running. If the secrets match then the
 		 * shutdown is issued, otherwise it is ignored.
 		 */
-		
+
+		endpoint.on("*", (args)->{
+			String check = (String) args[0];
+			String how =(String) args[1];
+			checkShutdown(check,how);
+		});
+
+
 		KeepAliveProtocol keepAliveProtocol = new KeepAliveProtocol(endpoint,this);
 		try {
 			// we need to add it to the endpoint before starting it
