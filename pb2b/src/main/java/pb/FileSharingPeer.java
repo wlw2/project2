@@ -351,7 +351,7 @@ public class FileSharingPeer {
 		// set a nice log format
 		System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tl:%1$tM:%1$tS:%1$tL] [%4$s] %2$s: %5$s%n");
 
-		// parse command line options
+		// parse command line options.
 		Options options = new Options();
 		options.addOption("port", true, "peer server port, an integer");
 		options.addOption("host", true, "index server hostname, a string");
