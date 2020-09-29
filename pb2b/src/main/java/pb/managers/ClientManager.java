@@ -208,7 +208,7 @@ public class ClientManager extends Manager implements ISessionProtocolHandler,
 		log.severe("connection with server terminated abruptly");
 		localEmit(sessionError,endpoint);
 		endpoint.close();
-		shouldWeRetry=true;
+		shouldWeRetry = true;
 	}
 
 	/**
