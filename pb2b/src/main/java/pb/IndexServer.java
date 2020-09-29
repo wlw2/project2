@@ -235,7 +235,7 @@ public class IndexServer {
 		 * TODO: for Project 2B. Create a "-password" option that reads a string
 		 * password from the user at the command line. Use the
 		 * ServerManager(port,password) initializer (that needs to be created by you in
-		 * ServerMain.java) if the password was given.
+		 * ServerMain.java) if the password was given
 		 */
 
 		if(cmd.hasOption("password")) {
