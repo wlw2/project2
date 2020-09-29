@@ -193,6 +193,22 @@ public class FileSharingPeer {
 		 * informative for the events when they they occur.
 		 */
 
+        clientManager.on(PeerManager.peerStarted, (eventArgs) -> {
+            Endpoint endpoint = (Endpoint) eventArgs[0];
+            log.info("Peer started: " + endpoint.getOtherEndpointId());
+            System.out.println("Peer session started.");
+            endpoint.on("PEER_UPDATE", (eventArgs2) -> {
+                emitIndexUpdate(peerport, filenames, endpoint, clientManager);
+            }).on("INDEX_UPDATE_ERROR", (eventArgs2) -> {
+                log.info("Index update error: " + endpoint.getOtherEndpointId());
+                System.out.println("Index update error.");
+            });
+        }).on(PeerManager.peerStopped, (eventArgs) -> {
+            Endpoint endpoint = (Endpoint) eventArgs[0];
+            log.info("Peer ended: " + endpoint.getOtherEndpointId());
+            System.out.println("Client session end.");
+        });
+
 		clientManager.start();
 	}
 
@@ -220,6 +236,20 @@ public class FileSharingPeer {
 		 * Print out something informative for the events when they occur.
 		 */
 
+        peerManager.on(PeerManager.peerStarted, (eventArgs) -> {
+            Endpoint endpoint = (Endpoint) eventArgs[0];
+            log.info("Peer started: " + endpoint.getOtherEndpointId());
+            System.out.println("Peer started.");
+            endpoint.on(getFile, (eventArgs2) -> {
+                for (String file : files) {
+                    startTransmittingFile(file, endpoint);
+                }
+            });
+        }).on(PeerManager.peerStopped, (eventArgs) -> {
+            Endpoint endpoint = (Endpoint) eventArgs[0];
+            log.info("Peer ended: " + endpoint.getOtherEndpointId());
+            System.out.println("Peer ended.");
+        });
 		peerManager.start();
 
 		// just keep sharing until the user presses "return"
@@ -236,7 +266,7 @@ public class FileSharingPeer {
 	 * @param queryResponse
 	 * @throws InterruptedException
 	 */
-	private static void getFileFromPeer(PeerManager peerManager, String response) throws InterruptedException {
+	private static void getFileFromPeer(PeerManager peerManager, String response) throws InterruptedException, UnknownHostException {
 		// Create a independent client manager (thread) for each download
 		// response has the format: PeerIP:PeerPort:filename
 		String[] parts = response.split(":", 3);
@@ -248,6 +278,11 @@ public class FileSharingPeer {
 		 * any errors and just return in this case. Otherwise you have a clientManager
 		 * that has connected.
 		 */
+        if (parts.length != 3) {
+            System.out.println("Format not separated by colons");
+            System.exit(-1);
+        }
+        clientManager = peerManager.connect(Integer.parseInt(parts[1]), parts[0]);
 
 		try {
 			OutputStream out = new FileOutputStream(parts[2]);
@@ -260,6 +295,7 @@ public class FileSharingPeer {
 			 * connection. Remember to emit a getFile event to request the file form the
 			 * peer. Print out something informative for the events that occur.
 			 */
+
 
 			clientManager.start();
 			/*
@@ -294,7 +330,6 @@ public class FileSharingPeer {
 		 * arrive. Make sure to emit your queryIndex event to actually query the index
 		 * server. Print out something informative for the events that occur.
 		 */
-
 		clientManager.start();
 		clientManager.join(); // wait for the query to finish, since we are in main
 		/*
