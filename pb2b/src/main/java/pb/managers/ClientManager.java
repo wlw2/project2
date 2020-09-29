@@ -287,7 +287,7 @@ public class ClientManager extends Manager implements ISessionProtocolHandler,
 	 */
 	@Override
 	public boolean protocolRequested(Endpoint endpoint, Protocol protocol) {
-		// the only protocols in this system are this kind...
+		// the only protocols in this system are this kind....
 		try {
 			((IRequestReplyProtocol)protocol).startAsClient();
 			endpoint.handleProtocol(protocol);
