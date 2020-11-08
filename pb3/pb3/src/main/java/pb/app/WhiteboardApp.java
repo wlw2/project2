@@ -27,7 +27,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-
 /**
  * Initial code obtained from:
  * https://www.ssaurel.com/blog/learn-how-to-make-a-swing-painting-and-drawing-application/
